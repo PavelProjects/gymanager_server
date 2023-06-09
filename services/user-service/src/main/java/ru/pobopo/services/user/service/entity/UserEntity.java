@@ -51,7 +51,7 @@ public class UserEntity {
     private LocalDateTime creationDate;
 
     @Column(name = "_active")
-    private boolean active;
+    private boolean active = true;
 
     @Column(name = "_auth_attempts")
     private int authAttempts;

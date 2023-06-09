@@ -76,22 +76,20 @@ create table gm_user_roles (
   _user_id char(12) not null references gm_user(_id)
 );
 
-insert into gm_user_type (_name, _caption) values ('trainer', 'Тренер');
+insert into gm_user_type (_name, _caption) values ('trainer', 'Тренер'), ('staff', 'Поддержка');
+insert into gm_role (_name, _caption) values ('admin', 'Админочка'), ('moderator', 'Модератор');
 
-insert into gm_user (_login, _password, _name, _type)
-  select
-    'test_admin',
-    '$2a$10$8vzgsIktNcMSE1/QU49jVeO1dVo2sJFFdHncZbN.QAFEhXovqSJA6',
-    'Admin',
-    t._id
-  from gm_user_type t where _name = 'trainer';
+--insert into gm_user (_login, _password, _name, _type)
+--  select
+--    'test_admin',
+--    '$2a$10$8vzgsIktNcMSE1/QU49jVeO1dVo2sJFFdHncZbN.QAFEhXovqSJA6',
+--    'Admin',
+--    t._id
+--  from gm_user_type t where _name = 'trainer';
+--
 
-insert into gm_role (_name, _caption) values (
-  'admin',
-  'Админочка'
-);
-
-insert into gm_user_roles (_role_id, _user_id)
-  select r._id, u._id from gm_role r, gm_user u where r._name = 'admin' and u._login = 'test_admin';
+--
+--insert into gm_user_roles (_role_id, _user_id)
+--  select r._id, u._id from gm_role r, gm_user u where r._name = 'admin' and u._login = 'test_admin';
 
 commit;

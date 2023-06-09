@@ -1,17 +1,19 @@
 package ru.pobopo.services.user.service.services.impl;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
-import lombok.extern.log4j.Log4j2;
+import javax.naming.AuthenticationException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.webjars.NotFoundException;
+import ru.pobopo.services.user.service.context.RequestContextHolder;
 import ru.pobopo.services.user.service.controller.objects.CreateUserRequest;
 import ru.pobopo.services.user.service.controller.objects.UpdateUserRequest;
-import ru.pobopo.services.user.service.entity.Role;
 import ru.pobopo.services.user.service.entity.UserEntity;
 import ru.pobopo.services.user.service.entity.UserTypeEntity;
 import ru.pobopo.services.user.service.exceptions.AccessDeniedException;
@@ -20,10 +22,9 @@ import ru.pobopo.services.user.service.repository.UserRepository;
 import ru.pobopo.services.user.service.repository.UserTypeRepository;
 import ru.pobopo.services.user.service.services.PermitService;
 import ru.pobopo.services.user.service.services.api.UserService;
-import ru.pobopo.shared.objects.UserDetails;
 
 @Service
-@Log4j2
+@Slf4j
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserTypeRepository userTypeRepository;
@@ -58,34 +59,36 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public UserEntity createUser(CreateUserRequest request) {
+    public UserEntity createUser(CreateUserRequest request) throws BadRequestException {
         Objects.requireNonNull(request);
+        UserEntity user = getUserByLogin(request.getLogin());
+        if (user != null) {
+            throw new BadRequestException("User with login " + request.getLogin() + " already exists!");
+        }
 
         UserTypeEntity typeEntity = userTypeRepository.findByName(request.getType());
         Objects.requireNonNull(typeEntity, "Can't find this user type");
         String encodedPassword = passwordEncoder.encode(request.getPassword());
 
-        UserEntity user = new UserEntity();
+        user = new UserEntity();
         user.setLogin(request.getLogin());
         user.setPassword(encodedPassword);
         user.setName(request.getName());
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
         user.setType(typeEntity);
+        user.setCreationDate(LocalDateTime.now());
 
         UserEntity userEntity = userRepository.save(user);
-        log.info("New user created: " + userEntity);
+        log.info("[{}] New user created: {}",
+            RequestContextHolder.getRequestUuidString(), userEntity);
         return userEntity;
-    }
-
-    @Override
-    public UserEntity getUserByDetails(UserDetails details) {
-        return userRepository.findByLoginAndId(details.getUserLogin(), details.getUserId());
     }
 
     @Transactional
     @Override
-    public void updateUser(UpdateUserRequest request) throws BadRequestException, AccessDeniedException {
+    public void updateUser(UpdateUserRequest request)
+        throws BadRequestException, AccessDeniedException, AuthenticationException {
         UserEntity user;
         if (StringUtils.isNotBlank(request.getId())) {
             user = getUserById(request.getId());
@@ -97,9 +100,9 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw new NotFoundException("Can't find user with given id/login");
         }
-        UserEntity currentUser = getUserByDetails(request.getUserDetails());
-        if (!PermitService.canEditUser(currentUser, user)) {
-            log.warn(String.format("User %s tried to edit user %s", currentUser.toString(), user.toString()));
+        if (!PermitService.canEditUser(user)) {
+            log.warn("[{}] User {} tried to edit user {}",
+                RequestContextHolder.getRequestUuidString(), PermitService.getCurrentUserName(), user);
             throw new AccessDeniedException();
         }
 

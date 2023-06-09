@@ -7,22 +7,20 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.pobopo.services.user.service.controller.objects.AuthRequest;
 import ru.pobopo.services.user.service.controller.objects.TokenResponse;
 import ru.pobopo.services.user.service.entity.Role;
 import ru.pobopo.services.user.service.entity.UserEntity;
-import ru.pobopo.services.user.service.exceptions.BadTokenException;
-import ru.pobopo.services.user.service.exceptions.NotAuthenticatedException;
+import javax.naming.AuthenticationException;
 import ru.pobopo.services.user.service.exceptions.TokenExpiredException;
 import ru.pobopo.services.user.service.services.api.AuthService;
-import ru.pobopo.shared.objects.BaseRequest;
-import ru.pobopo.shared.objects.UserDetails;
+import ru.pobopo.services.user.service.controller.objects.UserDetailsResponse;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
-
     private final AuthService authService;
 
     @Autowired
@@ -31,10 +29,10 @@ public class AuthController {
     }
 
     @GetMapping("/validate")
-    public UserDetails validateToken(@PathVariable String token)
-        throws NotAuthenticatedException, TokenExpiredException, BadTokenException {
+    public UserDetailsResponse validateToken(@RequestParam("token") String token)
+        throws AuthenticationException, TokenExpiredException {
         UserEntity user = authService.validateToken(token);
-        return new UserDetails(
+        return new UserDetailsResponse(
             user.getLogin(),
             user.getId(),
             user.getRoles().stream().map(Role::getName).collect(Collectors.toList())
@@ -42,7 +40,7 @@ public class AuthController {
     }
 
     @PostMapping
-    public TokenResponse auth(@RequestBody AuthRequest request) throws NotAuthenticatedException {
+    public TokenResponse auth(@RequestBody AuthRequest request) throws AuthenticationException {
         return new TokenResponse(authService.authUser(request.getLogin(), request.getPassword()));
     }
 }

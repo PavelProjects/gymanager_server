@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import ru.pobopo.services.user.service.entity.UserEntity;
-import ru.pobopo.services.user.service.exceptions.BadTokenException;
 import ru.pobopo.services.user.service.exceptions.TokenExpiredException;
 import ru.pobopo.services.user.service.services.api.UserService;
 
@@ -83,17 +82,17 @@ public class JwtTokenService {
             .signWith(SignatureAlgorithm.HS512, secret).compact();
     }
 
-    public String validateAndGetLogin(String token) throws BadTokenException, TokenExpiredException {
+    public String validateAndGetLogin(String token) throws TokenExpiredException {
         if (StringUtils.isBlank(token)) {
-            throw new BadTokenException("Token is missing!");
+            throw new JwtException("Token is missing!");
         }
         if (isTokenExpired(token)) {
-            throw new TokenExpiredException();
+            throw new TokenExpiredException("Token expired");
         }
 
         String login = getUsernameFromToken(token);
         if (StringUtils.isBlank(login)) {
-            throw new BadTokenException();
+            throw new JwtException("Login is blank");
         }
         return login;
     }

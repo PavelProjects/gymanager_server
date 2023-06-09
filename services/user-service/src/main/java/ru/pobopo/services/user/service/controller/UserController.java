@@ -1,5 +1,6 @@
 package ru.pobopo.services.user.service.controller;
 
+import javax.naming.AuthenticationException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.pobopo.services.user.service.controller.objects.CreateUserRequest;
 import ru.pobopo.services.user.service.controller.objects.UpdateUserRequest;
@@ -32,11 +34,8 @@ public class UserController {
 
     @GetMapping
     public UserDto getUser(
-        // Проверка на права?
-//        @PathVariable String currentUserLogin,
-//        @PathVariable String currentUserId,
-        @PathVariable String login,
-        @PathVariable String id
+        @RequestParam(required = false) String login,
+        @RequestParam(required = false) String id
     ) throws BadRequestException {
         UserEntity user;
         if (StringUtils.isNotBlank(login)) {
@@ -53,13 +52,14 @@ public class UserController {
     }
 
     @PostMapping("/create")
-    public UserDto createUser(@RequestBody CreateUserRequest request) {
+    public UserDto createUser(@RequestBody CreateUserRequest request) throws BadRequestException {
         UserEntity user = userService.createUser(request);
         return userMapper.toDto(user);
     }
 
     @PutMapping("/update")
-    public void updateUser(@RequestBody UpdateUserRequest request) throws AccessDeniedException, BadRequestException {
+    public void updateUser(@RequestBody UpdateUserRequest request)
+        throws AccessDeniedException, BadRequestException, AuthenticationException {
         userService.updateUser(request);
     }
 }

@@ -1,16 +1,16 @@
-package ru.pobopo.shared.objects;
+package ru.pobopo.services.user.service.controller.objects;
 
 import java.util.List;
 
-public class UserDetails {
+public class UserDetailsResponse {
     private String userLogin;
     private String userId;
     private List<String> roles;
 
-    public UserDetails() {
+    public UserDetailsResponse() {
     }
 
-    public UserDetails(String userLogin, String userId, List<String> roles) {
+    public UserDetailsResponse(String userLogin, String userId, List<String> roles) {
         this.userLogin = userLogin;
         this.userId = userId;
         this.roles = roles;
