@@ -16,9 +16,9 @@ services:
     networks:
       - user_service_network
     ports:
-      - "8080:8080"
+      - "9090:8080"
     expose:
-      - 8080
+      - 9090
     depends_on:
       - user-db
     environment:

@@ -4,7 +4,7 @@ RUN git clone https://github.com/PavelProjects/gymanager_server /home/repo -b us
 # Build
 FROM maven:3.6.0-jdk-11-slim AS build
 COPY --from=repo /home/repo /home/app
-RUN mvn -f /home/app/pom.xml clean package -pl :shared,:objects,:user-service -am -T 0.5C
+RUN mvn -f /home/app/pom.xml clean package -pl :user-service -am -T 0.5C
 
 # Run
 FROM openjdk:11-jre-slim
