@@ -3,7 +3,7 @@
 begin;
 
 create sequence main_id_sequence;
-create function getnextid() returns char(8) as
+create function getnextid() returns char(12) as
     $$ declare
       str text :=  '0123456789abcdefghijklmnopqrstuvwxyz';
       val bigint;
@@ -23,7 +23,7 @@ create function getnextid() returns char(8) as
       end;   $$
 language plpgsql;
 
-create function trigger_set_login() RETURNS trigger LANGUAGE plpgsql AS
+create function trigger_set_login() RETURNS trigger AS
     $$
     BEGIN
     IF new._login IS NULL
@@ -36,7 +36,7 @@ language plpgsql;
 
 -- тип юзера (тренер, клиент)
 create table gm_user_type (
-  _id char(12) primary key not null default value getnextid(),
+  _id char(12) primary key not null default getnextid(),
   _name char(64) not null unique,
   _caption char(128) not null
 );
@@ -45,7 +45,7 @@ create table gm_user_type (
 -- Почта и телефон не обязательны, тк эта таблица будет использоваться для хранения не зареганных
 -- клиентов. Они должны будут быть заполнены.
 create table gm_user (
-  _id char(12) primary key not null default value getnextid(),
+  _id char(12) primary key not null default getnextid(),
   _login varchar(32) not null unique,
   _password varchar(128) not null,
   _creation_date timestamp not null default now(),
@@ -63,14 +63,14 @@ create trigger set_login_before_insert
   execute function trigger_set_login();
 
 create table gm_role (
-  _id char(12) primary key not null default value getnextid(),
+  _id char(12) primary key not null default getnextid(),
   _creation_date timestamp not null default now(),
   _name varchar(64) not null unique,
   _caption varchar(128) not null
 );
 
 create table gm_user_roles (
-  _id char(12) primary key not null default value getnextid(),
+  _id char(12) primary key not null default getnextid(),
   _creation_date timestamp not null default now(),
   _role_id char(12) not null references gm_role(_id),
   _user_id char(12) not null references gm_user(_id)
@@ -81,10 +81,10 @@ insert into gm_user_type (_name, _caption) values ('trainer', 'Тренер');
 insert into gm_user (_login, _password, _name, _type)
   select
     'test_admin',
-    '$2a$10$8vzgsIktNcMSE1/QU49jVeO1dVo2sJFFdHncZbN.QAFEhXovqSJA6'
+    '$2a$10$8vzgsIktNcMSE1/QU49jVeO1dVo2sJFFdHncZbN.QAFEhXovqSJA6',
     'Admin',
-    t._name
-  from gm_user_type where _name = 'trainer';
+    t._id
+  from gm_user_type t where _name = 'trainer';
 
 insert into gm_role (_name, _caption) values (
   'admin',
