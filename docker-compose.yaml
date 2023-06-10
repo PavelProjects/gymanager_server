@@ -25,8 +25,8 @@ services:
     depends_on:
       - user-app
     environment:
-      USER_SERVICE_PATH: user-app
-      AUTH_SERVICE_PATH: user-app
+      USER_SERVICE_PATH: http://user-app:8080
+      AUTH_SERVICE_PATH: http://user-app:8080
 
   user-app:
     container_name: user-app

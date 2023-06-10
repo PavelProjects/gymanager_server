@@ -21,7 +21,7 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <start-class>ru.pobopo.services.user.service.UserServiceMain</start-class>
+        <start-class>ru.pobopo.gymanager.services.user.service.UserServiceMain</start-class>
     </properties>
 
     <dependencies>
@@ -58,11 +58,6 @@
             <version>1.6.9</version>
         </dependency>
         <dependency>
-            <groupId>javax.websocket</groupId>
-            <artifactId>javax.websocket-api</artifactId>
-            <version>1.1</version>
-        </dependency>
-        <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.9.0</version>
@@ -89,6 +84,12 @@
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-web</artifactId>
             <version>5.7.3</version>
+        </dependency>
+        <dependency>
+            <groupId>ru.pobopo</groupId>
+            <artifactId>shared</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
