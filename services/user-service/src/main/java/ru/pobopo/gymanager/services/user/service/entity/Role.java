@@ -19,7 +19,7 @@ import org.hibernate.annotations.GenericGenerator;
 @NoArgsConstructor
 public class Role {
     @Id
-    @GenericGenerator(name = "entity_id", strategy = "ru.pobopo.services.user.service.entity.EntityIdGenerator")
+    @GenericGenerator(name = "entity_id", strategy = "ru.pobopo.gymanager.services.user.service.entity.EntityIdGenerator")
     @GeneratedValue(generator = "entity_id")
     @Column(name = "_id")
     private String id;
