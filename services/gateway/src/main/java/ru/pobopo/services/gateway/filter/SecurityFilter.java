@@ -12,6 +12,8 @@ import reactor.core.publisher.Mono;
 import ru.pobopo.services.gateway.objects.UserInfo;
 import ru.pobopo.services.gateway.service.AuthenticationService;
 
+import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR;
+
 @Slf4j
 @Component
 public class SecurityFilter implements GlobalFilter {

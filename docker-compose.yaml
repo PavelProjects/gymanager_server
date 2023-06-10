@@ -3,17 +3,38 @@ version: '3.8'
 networks:
   user_service_network:
     driver: bridge
+  gateway:
+    driver: bridge
 
 volumes:
   user-db-volume:
 
 services:
+  gateway-app:
+    container_name: gateway
+    build:
+      context: ./services/gateway
+      dockerfile: Dockerfile
+    networks:
+      - gateway
+      - user_service_network
+    ports:
+      - "8080:8080"
+    expose:
+      - 8080
+    depends_on:
+      - user-app
+    environment:
+      USER_SERVICE_PATH: user-app
+      AUTH_SERVICE_PATH: user-app
+
   user-app:
     container_name: user-app
     build:
       context: ./services/user-service
       dockerfile: Dockerfile
     networks:
+      - gateway
       - user_service_network
     ports:
       - "9090:8080"
@@ -30,6 +51,7 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
       SPRING_JPA_HIBERNATE_SHOW_SQL: false
       JWT_SECRET: ${JWT_SECRET}
+
   user-db:
     container_name: user-db
     image: postgres:13.3
