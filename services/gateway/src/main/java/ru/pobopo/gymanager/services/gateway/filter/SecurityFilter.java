@@ -59,7 +59,7 @@ public class SecurityFilter implements GlobalFilter {
                 .header(CURRENT_REQUEST_ID, currentRequestId);
 
             if (token == null || token.size() != 1) {
-                if (unprotectedPathsValidator.isUnprotectedPath(originalRequest.getPath().value())) {
+                if (!unprotectedPathsValidator.isUnprotectedPath(originalRequest.getPath().value())) {
                     throw new MissingTokenException("Token is missing!");
                 }
                 ServerWebExchange newExchange = exchange.mutate().request(requestBuilder.build()).build();
