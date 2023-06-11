@@ -1,6 +1,6 @@
 package ru.pobopo.gymanager.services.user.service.filter;
 
-import static ru.pobopo.gymanager.shared.objects.HeadersNames.CURRENT_REQUEST_ID;
+import static ru.pobopo.gymanager.shared.constants.HeadersNames.CURRENT_REQUEST_ID;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -34,18 +34,20 @@ public class TransactionFilter extends OncePerRequestFilter {
             // не смертельно, тк эти данные используются тут только для логирования
             userInfo = new AuthorizedUserInfo("USER-MISSING", "USER-MISSING", "");
         }
+
         log.info(LOG_REQUEST,
             RequestContextHolder.getRequestId(),
             userInfo.getUserLogin(),
             request.getMethod(),
             request.getServletPath()
         );
-
-        filterChain.doFilter(request, response);
-
-        log.info(LOG_RESPONSE,
-            RequestContextHolder.getRequestId(),
-            userInfo.getUserLogin()
-        );
+        try {
+            filterChain.doFilter(request, response);
+        } finally {
+            log.info(LOG_RESPONSE,
+                RequestContextHolder.getRequestId(),
+                userInfo.getUserLogin()
+            );
+        }
     }
 }

@@ -1,4 +1,4 @@
-package ru.pobopo.gymanager.shared.objects;
+package ru.pobopo.gymanager.shared.constants;
 
 public interface HeadersNames {
     String USER_LOGIN_HEADER = "Current-User-Login";

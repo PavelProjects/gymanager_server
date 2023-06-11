@@ -1,9 +1,9 @@
 package ru.pobopo.gymanager.services.gateway.filter;
 
-import static ru.pobopo.gymanager.shared.objects.HeadersNames.CURRENT_REQUEST_ID;
-import static ru.pobopo.gymanager.shared.objects.HeadersNames.USER_ID_HEADER;
-import static ru.pobopo.gymanager.shared.objects.HeadersNames.USER_LOGIN_HEADER;
-import static ru.pobopo.gymanager.shared.objects.HeadersNames.USER_ROLES_HEADER;
+import static ru.pobopo.gymanager.shared.constants.HeadersNames.CURRENT_REQUEST_ID;
+import static ru.pobopo.gymanager.shared.constants.HeadersNames.USER_ID_HEADER;
+import static ru.pobopo.gymanager.shared.constants.HeadersNames.USER_LOGIN_HEADER;
+import static ru.pobopo.gymanager.shared.constants.HeadersNames.USER_ROLES_HEADER;
 
 import com.google.gson.Gson;
 import java.nio.charset.StandardCharsets;
@@ -26,19 +26,27 @@ import ru.pobopo.gymanager.services.gateway.service.AuthenticationService;
 import ru.pobopo.gymanager.shared.objects.ErrorResponse;
 import ru.pobopo.gymanager.shared.objects.AuthorizedUserInfo;
 import org.apache.commons.lang3.StringUtils;
+import ru.pobopo.gymanager.shared.objects.UnprotectedPathsValidator;
 
 @Slf4j
 @Component
 public class SecurityFilter implements GlobalFilter {
+
     private static final String TOKEN_HEADER = "Gymanager-Token";
 
     private final AuthenticationService authenticationService;
+    private final UnprotectedPathsValidator unprotectedPathsValidator;
     private final Gson gson;
 
     @Autowired
-    public SecurityFilter(AuthenticationService authenticationService, Gson gson) {
+    public SecurityFilter(
+        AuthenticationService authenticationService,
+        Gson gson,
+        UnprotectedPathsValidator unprotectedPathsValidator
+    ) {
         this.authenticationService = authenticationService;
         this.gson = gson;
+        this.unprotectedPathsValidator = unprotectedPathsValidator;
     }
 
     @Override
@@ -51,7 +59,7 @@ public class SecurityFilter implements GlobalFilter {
                 .header(CURRENT_REQUEST_ID, currentRequestId);
 
             if (token == null || token.size() != 1) {
-                if (!permitAllPath(originalRequest.getPath().value())) {
+                if (unprotectedPathsValidator.isUnprotectedPath(originalRequest.getPath().value())) {
                     throw new MissingTokenException("Token is missing!");
                 }
                 ServerWebExchange newExchange = exchange.mutate().request(requestBuilder.build()).build();
@@ -88,10 +96,5 @@ public class SecurityFilter implements GlobalFilter {
         String responseJson = gson.toJson(errorResponse);
         DataBuffer buffer = response.bufferFactory().wrap(responseJson.getBytes(StandardCharsets.UTF_8));
         return response.writeWith(Mono.just(buffer));
-    }
-
-    // Todo вынести список доступных путей без авторизации в переменные окружения
-    private boolean permitAllPath(String path) {
-        return StringUtils.equals(path, "/auth") || StringUtils.equals(path, "/user/create");
     }
 }

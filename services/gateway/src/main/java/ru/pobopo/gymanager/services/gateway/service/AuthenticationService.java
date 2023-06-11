@@ -1,6 +1,6 @@
 package ru.pobopo.gymanager.services.gateway.service;
 
-import static ru.pobopo.gymanager.shared.objects.HeadersNames.CURRENT_REQUEST_ID;
+import static ru.pobopo.gymanager.shared.constants.HeadersNames.CURRENT_REQUEST_ID;
 
 import com.google.gson.Gson;
 import java.io.BufferedReader;

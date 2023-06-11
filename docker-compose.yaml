@@ -27,6 +27,7 @@ services:
     environment:
       USER_SERVICE_PATH: http://user-app:8080
       AUTH_SERVICE_PATH: http://user-app:8080
+      UNPROTECTED_PATHS: /auth;/user/create
 
   user-app:
     container_name: user-app
@@ -51,6 +52,7 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
       SPRING_JPA_HIBERNATE_SHOW_SQL: false
       JWT_SECRET: ${JWT_SECRET}
+      UNPROTECTED_PATHS: /auth;/auth/validate;/user/create
 
   user-db:
     container_name: user-db

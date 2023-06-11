@@ -1,11 +1,13 @@
 package ru.pobopo.gymanager.services.user.service.filter;
 
-import static ru.pobopo.gymanager.shared.objects.HeadersNames.USER_ID_HEADER;
-import static ru.pobopo.gymanager.shared.objects.HeadersNames.USER_LOGIN_HEADER;
-import static ru.pobopo.gymanager.shared.objects.HeadersNames.USER_ROLES_HEADER;
+import static ru.pobopo.gymanager.shared.constants.HeadersNames.USER_ID_HEADER;
+import static ru.pobopo.gymanager.shared.constants.HeadersNames.USER_LOGIN_HEADER;
+import static ru.pobopo.gymanager.shared.constants.HeadersNames.USER_ROLES_HEADER;
 
 import com.google.gson.Gson;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -14,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -21,6 +24,7 @@ import ru.pobopo.gymanager.services.user.service.context.RequestContextHolder;
 import ru.pobopo.gymanager.services.user.service.exception.AccessDeniedException;
 import ru.pobopo.gymanager.shared.objects.AuthorizedUserInfo;
 import ru.pobopo.gymanager.shared.objects.ErrorResponse;
+import ru.pobopo.gymanager.shared.objects.UnprotectedPathsValidator;
 
 // todo вынести куда то в общее?
 
@@ -29,10 +33,12 @@ import ru.pobopo.gymanager.shared.objects.ErrorResponse;
 @Order(0)
 public class SecurityFilter extends OncePerRequestFilter {
     private final Gson gson;
+    private final UnprotectedPathsValidator unprotectedPathsValidator;
 
     @Autowired
-    public SecurityFilter(Gson gson) {
+    public SecurityFilter(Gson gson, UnprotectedPathsValidator unprotectedPathsValidator) {
         this.gson = gson;
+        this.unprotectedPathsValidator = unprotectedPathsValidator;
     }
 
     @Override
@@ -42,8 +48,8 @@ public class SecurityFilter extends OncePerRequestFilter {
         String userId = request.getHeader(USER_ID_HEADER);
         String userRoles = request.getHeader(USER_ROLES_HEADER);
         try {
-            if (StringUtils.isBlank(userLogin) && StringUtils.isBlank(userId) ) {
-                if (permitAllPath(request.getRequestURI())) {
+            if (StringUtils.isBlank(userLogin) || StringUtils.isBlank(userId) ) {
+                if (unprotectedPathsValidator.isUnprotectedPath(request.getRequestURI())) {
                     filterChain.doFilter(request, response);
                     return;
                 } else {
@@ -65,7 +71,6 @@ public class SecurityFilter extends OncePerRequestFilter {
         }
     }
 
-
     private void processException(Exception exception, HttpServletResponse response) throws IOException {
         ErrorResponse errorResponse = new ErrorResponse();
         if (exception != null) {
@@ -79,10 +84,5 @@ public class SecurityFilter extends OncePerRequestFilter {
             response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
         }
         response.getWriter().write(gson.toJson(errorResponse));
-    }
-
-    // Todo вынести список доступных путей без авторизации в переменные окружения
-    private boolean permitAllPath(String path) {
-        return StringUtils.equals(path, "/auth") || StringUtils.equals(path, "/user/create");
     }
 }
