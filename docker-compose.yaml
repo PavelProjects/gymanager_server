@@ -37,10 +37,6 @@ services:
     networks:
       - gateway
       - user_service_network
-    ports:
-      - "9090:8080"
-    expose:
-      - 9090
     depends_on:
       - user-db
     environment:
@@ -52,7 +48,13 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
       SPRING_JPA_HIBERNATE_SHOW_SQL: false
       JWT_SECRET: ${JWT_SECRET}
-      UNPROTECTED_PATHS: /auth;/auth/validate;/user/create
+      UNPROTECTED_PATHS: /health;/auth;/auth/validate;/user/create
+    healthcheck:
+      test: "curl -X GET http://user-app:8080/health"
+      start_period: 5s
+      retries: 5
+      interval: 10s
+      timeout: 1s
 
   user-db:
     container_name: user-db

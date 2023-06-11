@@ -25,7 +25,6 @@ import ru.pobopo.gymanager.services.gateway.exception.UnauthorizedException;
 import ru.pobopo.gymanager.services.gateway.service.AuthenticationService;
 import ru.pobopo.gymanager.shared.objects.ErrorResponse;
 import ru.pobopo.gymanager.shared.objects.AuthorizedUserInfo;
-import org.apache.commons.lang3.StringUtils;
 import ru.pobopo.gymanager.shared.objects.UnprotectedPathsValidator;
 
 @Slf4j
