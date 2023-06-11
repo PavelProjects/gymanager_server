@@ -27,6 +27,7 @@ services:
     environment:
       REDIS_PORT: ${REDIS_PORT}
       REDIS_HOST: gateway-cache
+      TOKEN_CACHE_EXPIRE_TIME: 5 #sec
       USER_SERVICE_PATH: http://user-app:8080
       AUTH_SERVICE_PATH: http://user-app:8080
       UNPROTECTED_PATHS: /auth;/user/create
