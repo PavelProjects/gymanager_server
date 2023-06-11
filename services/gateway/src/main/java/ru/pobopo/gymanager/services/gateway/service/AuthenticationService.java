@@ -1,8 +1,9 @@
 package ru.pobopo.gymanager.services.gateway.service;
 
+import static ru.pobopo.gymanager.shared.objects.HeadersNames.CURRENT_REQUEST_ID;
+
 import com.google.gson.Gson;
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -16,7 +17,7 @@ import org.springframework.stereotype.Service;
 import ru.pobopo.gymanager.services.gateway.exception.UnauthorizedException;
 import ru.pobopo.gymanager.services.gateway.util.ParameterStringBuilder;
 import ru.pobopo.gymanager.shared.objects.ErrorResponse;
-import ru.pobopo.gymanager.shared.objects.UserDetailsResponse;
+import ru.pobopo.gymanager.shared.objects.AuthorizedUserInfo;
 
 @Slf4j
 @Service
@@ -30,11 +31,12 @@ public class AuthenticationService {
         this.gson = gson;
     }
 
-    public UserDetailsResponse validateToken(String token) throws IOException, UnauthorizedException {
+    public AuthorizedUserInfo validateToken(String currentRequestId, String token) throws IOException, UnauthorizedException {
         String params = ParameterStringBuilder.getParamsString(Map.of("token", token));
         URL url = new URL(userServicePath + "/auth/validate?" + params);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("GET");
+        con.setRequestProperty(CURRENT_REQUEST_ID, currentRequestId);
         con.setDoOutput(true);
 
         int status = con.getResponseCode();
@@ -67,6 +69,6 @@ public class AuthenticationService {
             throw new UnauthorizedException(errorResponse.getMessage(), errorResponse.getException());
         }
 
-        return gson.fromJson(content.toString(), UserDetailsResponse.class);
+        return gson.fromJson(content.toString(), AuthorizedUserInfo.class);
     }
 }

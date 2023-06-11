@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.pobopo.gymanager.services.user.service.controller.objects.AuthRequest;
 import ru.pobopo.gymanager.services.user.service.controller.objects.TokenResponse;
-import ru.pobopo.gymanager.shared.objects.UserDetailsResponse;
+import ru.pobopo.gymanager.services.user.service.exception.BadCredentialsException;
+import ru.pobopo.gymanager.shared.objects.AuthorizedUserInfo;
 import ru.pobopo.gymanager.services.user.service.entity.Role;
 import ru.pobopo.gymanager.services.user.service.entity.UserEntity;
 import ru.pobopo.gymanager.services.user.service.exception.TokenExpiredException;
@@ -28,10 +29,10 @@ public class AuthController {
     }
 
     @GetMapping("/validate")
-    public UserDetailsResponse validateToken(@RequestParam("token") String token)
+    public AuthorizedUserInfo validateToken(@RequestParam("token") String token)
         throws AuthenticationException, TokenExpiredException {
         UserEntity user = authService.validateToken(token);
-        return new UserDetailsResponse(
+        return new AuthorizedUserInfo(
             user.getLogin(),
             user.getId(),
             user.getRoles().stream().map(Role::getName).collect(Collectors.joining(";"))
@@ -39,7 +40,7 @@ public class AuthController {
     }
 
     @PostMapping
-    public TokenResponse auth(@RequestBody AuthRequest request) throws AuthenticationException {
+    public TokenResponse auth(@RequestBody AuthRequest request) throws AuthenticationException, BadCredentialsException {
         return new TokenResponse(authService.authUser(request.getLogin(), request.getPassword()));
     }
 }

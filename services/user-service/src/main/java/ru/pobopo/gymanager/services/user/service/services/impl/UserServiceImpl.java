@@ -81,7 +81,7 @@ public class UserServiceImpl implements UserService {
 
         UserEntity userEntity = userRepository.save(user);
         log.info("[{}] New user created: {}",
-            RequestContextHolder.getRequestUuidString(), userEntity);
+            RequestContextHolder.getRequestId(), userEntity);
         return userEntity;
     }
 
@@ -102,7 +102,7 @@ public class UserServiceImpl implements UserService {
         }
         if (!PermitService.canEditUser(user)) {
             log.warn("[{}] User {} tried to edit user {}",
-                RequestContextHolder.getRequestUuidString(), PermitService.getCurrentUserName(), user);
+                RequestContextHolder.getRequestId(), PermitService.getCurrentUserName(), user);
             throw new AccessDeniedException();
         }
 

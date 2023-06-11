@@ -1,9 +1,14 @@
 package ru.pobopo.gymanager.services.gateway.filter;
 
+import static ru.pobopo.gymanager.shared.objects.HeadersNames.CURRENT_REQUEST_ID;
+import static ru.pobopo.gymanager.shared.objects.HeadersNames.USER_ID_HEADER;
+import static ru.pobopo.gymanager.shared.objects.HeadersNames.USER_LOGIN_HEADER;
+import static ru.pobopo.gymanager.shared.objects.HeadersNames.USER_ROLES_HEADER;
+
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -19,16 +24,13 @@ import ru.pobopo.gymanager.services.gateway.exception.MissingTokenException;
 import ru.pobopo.gymanager.services.gateway.exception.UnauthorizedException;
 import ru.pobopo.gymanager.services.gateway.service.AuthenticationService;
 import ru.pobopo.gymanager.shared.objects.ErrorResponse;
-import ru.pobopo.gymanager.shared.objects.UserDetailsResponse;
+import ru.pobopo.gymanager.shared.objects.AuthorizedUserInfo;
 import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 @Component
 public class SecurityFilter implements GlobalFilter {
     private static final String TOKEN_HEADER = "Gymanager-Token";
-    private final static String USER_LOGIN_HEADER = "Current-User-Login";
-    private final static String USER_ID_HEADER = "Current-User-Id";
-    private final static String USER_ROLES_HEADER = "Current-User-Roles";
 
     private final AuthenticationService authenticationService;
     private final Gson gson;
@@ -44,22 +46,26 @@ public class SecurityFilter implements GlobalFilter {
         ServerHttpRequest originalRequest = exchange.getRequest();
         try {
             List<String> token = originalRequest.getHeaders().get(TOKEN_HEADER);
+            String currentRequestId = UUID.randomUUID().toString();
+            ServerHttpRequest.Builder requestBuilder = originalRequest.mutate()
+                .header(CURRENT_REQUEST_ID, currentRequestId);
+
             if (token == null || token.size() != 1) {
                 if (!permitAllPath(originalRequest.getPath().value())) {
                     throw new MissingTokenException("Token is missing!");
                 }
-                return chain.filter(exchange);
+                ServerWebExchange newExchange = exchange.mutate().request(requestBuilder.build()).build();
+                return chain.filter(newExchange);
             }
 
-            UserDetailsResponse userDetails = authenticationService.validateToken(token.get(0));
-            ServerHttpRequest request = originalRequest.mutate()
+            AuthorizedUserInfo userDetails = authenticationService.validateToken(currentRequestId, token.get(0));
+            ServerHttpRequest request = requestBuilder
                 .header(USER_LOGIN_HEADER, userDetails.getUserLogin())
                 .header(USER_ID_HEADER, userDetails.getUserId())
                 .header(USER_ROLES_HEADER, userDetails.getRoles())
                 .build();
-            ServerWebExchange exchange1 = exchange.mutate().request(request).build();
-
-            return chain.filter(exchange1);
+            ServerWebExchange newExchange = exchange.mutate().request(request).build();
+            return chain.filter(newExchange);
         } catch (Exception exception) {
             return processException(exception, exchange.getResponse());
         }

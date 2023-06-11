@@ -4,12 +4,10 @@ import java.util.Objects;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import ru.pobopo.gymanager.services.user.service.context.RequestContextHolder;
+import ru.pobopo.gymanager.services.user.service.exception.BadCredentialsException;
 import ru.pobopo.gymanager.services.user.service.exception.TokenExpiredException;
 import ru.pobopo.gymanager.services.user.service.repository.UserRepository;
 import ru.pobopo.gymanager.services.user.service.services.JwtTokenService;
@@ -22,34 +20,31 @@ import ru.pobopo.gymanager.services.user.service.services.api.AuthService;
 public class AuthServiceImpl implements AuthService {
     private final JwtTokenService jwtTokenService;
     private final UserRepository userRepository;
-    private final AuthenticationManager authenticationManager;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
     public AuthServiceImpl(
         JwtTokenService jwtTokenService,
         UserRepository userRepository,
-        AuthenticationManager authenticationManager
+        PasswordEncoder passwordEncoder
     ) {
         this.jwtTokenService = jwtTokenService;
         this.userRepository = userRepository;
-        this.authenticationManager = authenticationManager;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
-    public String authUser(String login, String password) throws AuthenticationException {
+    public String authUser(String login, String password) throws AuthenticationException, BadCredentialsException {
         Objects.requireNonNull(login);
         Objects.requireNonNull(password);
         UserEntity user = getUserAndValidate(login);
 
-        Authentication auth = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(login, password));
-
-        if (!auth.isAuthenticated()) {
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             user.setAuthAttempts(user.getAuthAttempts() + 1);
             userRepository.save(user);
             log.warn(
                 "[{}] Failed attempt to auth (wrong password): {} / {}",
-                RequestContextHolder.getRequestUuidString(),
+                RequestContextHolder.getRequestId(),
                 login,
                 password
             );
