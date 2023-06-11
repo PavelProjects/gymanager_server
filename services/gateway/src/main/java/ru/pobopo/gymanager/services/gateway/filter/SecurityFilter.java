@@ -76,6 +76,7 @@ public class SecurityFilter implements GlobalFilter {
             ServerWebExchange newExchange = exchange.mutate().request(request).build();
             return chain.filter(newExchange);
         } catch (Exception exception) {
+            log.warn(exception.getMessage(), exception);
             return processException(exception, exchange.getResponse());
         }
     }

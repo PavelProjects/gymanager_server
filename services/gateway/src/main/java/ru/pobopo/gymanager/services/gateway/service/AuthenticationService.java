@@ -80,7 +80,7 @@ public class AuthenticationService {
             return;
         }
         try (Jedis jedis = jedisPool.getResource()) {
-            jedis.sadd(token, userInfo);
+            jedis.set(token, userInfo);
             jedis.expire(token, cacheExpireTime);
         }
     }
