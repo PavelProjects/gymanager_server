@@ -25,9 +25,22 @@ services:
     depends_on:
       - user-app
     environment:
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_HOST: gateway-cache
       USER_SERVICE_PATH: http://user-app:8080
       AUTH_SERVICE_PATH: http://user-app:8080
       UNPROTECTED_PATHS: /auth;/user/create
+  gateway-cache:
+    container_name: gateway-cache
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - ${REDIS_PORT}
+    expose:
+      - ${REDIS_PORT}
+    command: redis-server --save 20 1 --loglevel warning --port ${REDIS_PORT}
+    networks:
+      - gateway
 
   user-app:
     container_name: user-app

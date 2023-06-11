@@ -20,17 +20,16 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import ru.pobopo.gymanager.services.gateway.exception.AccessDeniedException;
 import ru.pobopo.gymanager.services.gateway.exception.MissingTokenException;
-import ru.pobopo.gymanager.services.gateway.exception.UnauthorizedException;
 import ru.pobopo.gymanager.services.gateway.service.AuthenticationService;
-import ru.pobopo.gymanager.shared.objects.ErrorResponse;
 import ru.pobopo.gymanager.shared.objects.AuthorizedUserInfo;
+import ru.pobopo.gymanager.shared.objects.ErrorResponse;
 import ru.pobopo.gymanager.shared.objects.UnprotectedPathsValidator;
 
 @Slf4j
 @Component
 public class SecurityFilter implements GlobalFilter {
-
     private static final String TOKEN_HEADER = "Gymanager-Token";
 
     private final AuthenticationService authenticationService;
@@ -40,12 +39,12 @@ public class SecurityFilter implements GlobalFilter {
     @Autowired
     public SecurityFilter(
         AuthenticationService authenticationService,
-        Gson gson,
-        UnprotectedPathsValidator unprotectedPathsValidator
+        UnprotectedPathsValidator unprotectedPathsValidator,
+        Gson gson
     ) {
         this.authenticationService = authenticationService;
-        this.gson = gson;
         this.unprotectedPathsValidator = unprotectedPathsValidator;
+        this.gson = gson;
     }
 
     @Override
@@ -66,6 +65,9 @@ public class SecurityFilter implements GlobalFilter {
             }
 
             AuthorizedUserInfo userDetails = authenticationService.validateToken(currentRequestId, token.get(0));
+            if (userDetails == null) {
+                throw new AccessDeniedException("Bad token");
+            }
             ServerHttpRequest request = requestBuilder
                 .header(USER_LOGIN_HEADER, userDetails.getUserLogin())
                 .header(USER_ID_HEADER, userDetails.getUserId())
@@ -82,7 +84,7 @@ public class SecurityFilter implements GlobalFilter {
         ErrorResponse errorResponse = new ErrorResponse();
         if (exception != null) {
             errorResponse.setMessage(exception.getMessage());
-            if (exception instanceof UnauthorizedException) {
+            if (exception instanceof AccessDeniedException) {
                 response.setStatusCode(HttpStatus.UNAUTHORIZED);
             } else if (exception instanceof MissingTokenException) {
                 response.setStatusCode(HttpStatus.BAD_REQUEST);
